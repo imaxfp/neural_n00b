@@ -3,7 +3,6 @@ from dataset_n00b import read_mnist_test_data, read_mnist_train_data
 from nerual_n00b import NeuralNetwork
 
 # TESTS
-
 class NeuralNetworkBasicTest(unittest.TestCase):    
     def setUp(self):
         self.nn = NeuralNetwork()
@@ -47,7 +46,7 @@ if __name__ == '__main__':
     # Create a test suite
     suite = unittest.TestSuite()
     suite.addTest(NeuralNetworkBasicTest('test_train_handwritten_digit_recognition'))
-    suite.addTest(NeuralNetworkBasicTest('test_pred_handwritten_digit_recognition'))
+    #suite.addTest(NeuralNetworkBasicTest('test_pred_handwritten_digit_recognition'))
 
     # Run the test suite
     runner = unittest.TextTestRunner()

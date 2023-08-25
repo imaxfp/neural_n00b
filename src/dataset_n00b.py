@@ -20,7 +20,7 @@ def read_mnist_data(output_nodes_amount: int, csv_path: str):
         targets_list.append(target.tolist())
 
     #return inputs_list[1:50], targets_list[1:50]
-    return inputs_list, targets_list
+    return inputs_list[1:], targets_list[1:]
         
 def read_mnist_train_data():
     return read_mnist_data(output_nodes_amount=10, csv_path="./data/mnist_test_10k.csv")
