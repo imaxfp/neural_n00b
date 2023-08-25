@@ -3,7 +3,6 @@ from typing import List
 from collections import deque
 import numpy as np
 import math
-from matrix_n00b import MatrixNoob
 from matrix_n00b_np import MatrixNoobNp
 import pickle
 
@@ -47,7 +46,9 @@ class Neuron:
 
         self.weights = weights
         self.bias = bias
+        #output of the neuron, can be a featore for the input to the lext layer 
         self.feature_x_neuron_output = feature_x_neuron_output
+        #delta error 
         self.delta = None
 
     def update_weights(self, weights: []):
@@ -58,17 +59,18 @@ class Neuron:
 
 
 class NeuralNetwork:
-    # initialise the neural network
+    '''
+    Neural net custom implementation
+    '''
     def __init__(self):
         self.matrix_n00b = MatrixNoobNp()
         self.layers = []
 
     def set_input_layer(self, features: List):
         """
-        _summary_ 
-        input layer means list of features for the neural network
-        Pay attention current input layer neurons does not have any parameters, only features.
-        Consider input layer as a VECTOR features 
+        Input layer means list of features for the neural network.
+        Pay attention! Current input layer does not have any parameters, only features.
+        Consider current input layer as a VECTOR features.
         """
         input_layer_neurons = [Neuron(feature_x_neuron_output=f) for f in features]
         if len(self.layers) == 0:
@@ -102,7 +104,7 @@ class NeuralNetwork:
 
     @staticmethod
     def calculate_loss(output, expected_output):
-        """_summary_
+        """
         Mean Squared Error (MSE) loss. 
         It measures the difference between the predicted output (output) of the neural network 
         and the expected output (expected_output) for a given set of inputs.
@@ -111,8 +113,8 @@ class NeuralNetwork:
 
     @staticmethod
     def weight_gaussian_distribution(left_hand_side_layer_amount_features_x: int) -> list:
-        """_summary_
-                They sample the weights from a normal probability distribution centered around zero
+        """
+        They sample the weights from a normal probability distribution centered around zero
         and with a standard deviation that is related to the number of incoming links into a node
         1/√(number of incoming links).
         In other words weights 'w' will be initialized with 67% probability in normal distribution window
@@ -131,6 +133,17 @@ class NeuralNetwork:
         return np.random.normal(mean, stddev, (left_hand_side_layer_amount_features_x)).tolist()
 
     def forward_propagation(self):
+        """
+        Forward Propagation in Neural Networks:
+        The main idea behind forward propagation is to pass the input data through each layer of the neural network, 
+        successively transforming it using weights and activation functions. The final output is a prediction based on the
+        transformed input. This process involves:
+        1. Multiplying the input by the layer's weights (matrix multiplication).
+        2. Adding biases to the result.
+        3. Applying an activation function to introduce non-linearity.
+        This is done for each layer until the final layer produces the network's output.
+        """
+
         input_data = self.layers[0]
         layers = self.layers[1:]
 
@@ -156,36 +169,27 @@ class NeuralNetwork:
 
     def backward_propagation(self, expected_output_target: list, learning_rate: float):
         """
-        backward propagation (more commonly called backpropagation)
-        Error is calculated between the expected outputs and the outputs forward propagated from the network. 
+        Backward Propagation in Neural Networks:
+        The primary purpose of backward propagation (often termed 'backprop') is to adjust the weights and biases of the neural network 
+        in response to the error in the network's predictions. It involves:
+        1. Computing the gradient of the loss function with respect to each weight by applying the chain rule, which measures how much 
+        each weight contributed to the error.
+        2. Adjusting the weights and biases in the opposite direction of the gradient to minimize the error.
+        3. Propagating this error backwards through the network, layer by layer, from the last layer to the first (right to left approach).
+        By repeatedly applying forward and backward propagation in training, the neural network learns the optimal weights and biases 
+        that best map inputs to desired outputs.
 
-        Args:
-            target_outputs: (list) actual values from dataset
-        """
-        # learning_rate = 0.1
-        # input_data = self.layers[0]
-        # output_layer = self.layers[-1]
-
-        """
-        Backward propagation algorithm for output layer
         https://www.youtube.com/watch?v=Ilg3gGewQ5U&t=3s&ab_channel=3Blue1Brown
         """
-        # final_outputs = [n.feature_x_neuron_output for n in output_layer]
-        # hidden_outputs = [n.feature_x_neuron_output for n in hidden_layers[-1]]
 
-        # Calculate delta errors for the hidden layers
-
-        # delta_err_output = []
         delta_error_weights_matrix = None
         delta_errors_by_layers = []
         for i in range(len(self.layers)-1, 0, -1):
             right_hand_side_layer = self.layers[i]
             left_hand_side_layer = self.layers[i-1]
 
-            right_hand_side_layer_outputs = [
-                n.feature_x_neuron_output for n in right_hand_side_layer]
-            left_hand_side_layer_outputs = [
-                n.feature_x_neuron_output for n in left_hand_side_layer]
+            right_hand_side_layer_outputs = [n.feature_x_neuron_output for n in right_hand_side_layer]
+            left_hand_side_layer_outputs = [n.feature_x_neuron_output for n in left_hand_side_layer]
 
             # convert left_hand_side_layer_outputs to the matrix
             left_hand_side_layer_outputs_matrix = self.matrix_n00b.list_to_matrix(
@@ -231,22 +235,13 @@ class NeuralNetwork:
                                                                                   left_hand_side_layer_outputs_matrix)
             delta_errors_by_layers.append(delta_error_weights_matrix)
 
-        """
-        STEP 
-        Update weights for the node
-        """
+        #Update weights for the node
         layers_skeep_input_layer = self.layers[1:]
         layers_skeep_input_layer.reverse()
         for i, layer in enumerate(layers_skeep_input_layer):
             for j, node in enumerate(layer):
                 res = learning_rate * np.array(delta_errors_by_layers[i][j])
-                node.weights = (np.array(node.weights) +
-                                np.array(res)).tolist()
-
-        """
-        STEP 5 
-        Calculate error and update weights for hidden layers
-        """
+                node.weights = (np.array(node.weights) + np.array(res)).tolist()
 
     def sigmoid_derivative(self, x):
         return x * (1 - x)
@@ -361,37 +356,13 @@ class NeuralNetwork:
 # TESTS
 class NeuralNetworkBasicTest(unittest.TestCase):
 
-    # Helper methods
-    def read_mnist_data(self, output_nodes_amount: int, csv_path: str):
-        with open(csv_path, "r") as training_data_file:
-            training_data_list = training_data_file.readlines()
-        # TRAIN -> go through all records in the training data set
-        inputs_list = []
-        targets_list = []
-        for record in training_data_list[1:]:
-            # split the record by the ',' commas
-            all_values = record.split(",")
-            # scale and shift the inputs
-            input = (np.asfarray(all_values[1:]) / 255.0 * 0.99) + 0.01
-            # create the target output values (all 0.01, except the desired label which is 0.99)
-            target = (np.zeros(output_nodes_amount) + 0.01)
-            # all_values[0] is the target label for this record
-            target[int(all_values[0])] = 0.99
-
-            inputs_list.append(input.tolist())
-            targets_list.append(target.tolist())
-
-        return inputs_list[1:50], targets_list[1:50]
-
-    def read_mnist_train_data(self):
-        return self.read_mnist_data(output_nodes_amount=10, csv_path="./data/mnist_test_10k.csv")
-
-    def read_mnist_test_data(self):
-        return self.read_mnist_data(output_nodes_amount=10, csv_path="./data/mnist_test_10k.csv")
-
     def setUp(self):
         self.nn = NeuralNetwork()
 
+    def startTest(self, test):
+        super().startTest(test)
+        print(f"\n######## Running test: ######## {test._testMethodName}\n{'='*40}")
+        
     def test_set_input_layer(self):
         self.nn.set_input_layer(features=[1, 2])
         self.nn.print_nn()
@@ -419,64 +390,27 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         self.assertIsNotNone(self.nn.layers[2][1].feature_x_neuron_output)
 
     def test_back_propagation(self):
-        expected_data_10 = [0.0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9]
-        expected_data_2 = [1.1, 2.2]
-        self.nn.set_input_layer(features=expected_data_2)
+        input_data = [1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
+        expected = [1.1, 2.2]
+        self.nn.set_input_layer(features=input_data)
         self.nn.add_layer(neurons_in_layer=4)
         # TODO uncomment me and fix architecture more than 2 layers
         # self.nn.add_layer(neurons_in_layer=4)
         self.nn.add_layer(neurons_in_layer=2)
         self.nn.forward_propagation()
-        self.nn.backward_propagation(
-            expected_output_target=expected_data_2, learning_rate=0.01)
+        self.nn.backward_propagation(expected_output_target=expected, learning_rate=0.01)
 
-    def test_train_handwritten_digit_recognition(self):
-        inputs_list, targets_list = self.read_mnist_train_data()
-        self.nn.set_input_layer(features=inputs_list[0])
-        self.nn.add_layer(neurons_in_layer=100)
-        self.nn.add_layer(neurons_in_layer=10)
-
-        self.nn.train(inputs_list, targets_list, learning_rate=0.01, epoch=1)
-        self.nn.save_model("./trained_nn.pkl")
-
-    def test_pred_handwritten_digit_recognition(self):
-        # 10k trainig dataset:
-        # predicted vector   ->  [0.13, 0.86, 0.55, 0.45, 0.25, 0.35, 0.57, 0.24, 0.39, 0.43]
-        # real target vector ->  [0.01, 0.99, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
-
-        inputs_list, targets_list = self.read_mnist_test_data()
-        loaded_nn = self.nn.load_model("./trained_nn.pkl")
-
-        predicted_outputs = []
-        for i in range(len(inputs_list)):
-            predicted_vector = loaded_nn.pred(inputs_list[i])
-            formatted_predicted_vector = [
-                float(f'{num:.2f}') for num in predicted_vector]
-            print("predicted vector   -> ", formatted_predicted_vector)
-            print("real target vector -> ", targets_list[i])
-
-            predicted_outputs.append(predicted_vector)
-
-        res = loaded_nn.calculate_accuracy(
-            predicted_outputs[:10], targets_list[:10])
-        # 42k damples = Accuracy =  0.9
-        print("Accuracy = ", res)
-
+   
 
 if __name__ == '__main__':
     # Create a test suite
     suite = unittest.TestSuite()
-    # suite.addTest(NeuralNetworkBasicTest('test_set_input_layer'))
-    # suite.addTest(NeuralNetworkBasicTest('test_add_one_layer'))
-    # suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
-    # suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
-    # suite.addTest(NeuralNetworkBasicTest('test_back_propagation'))
-
-    suite.addTest(NeuralNetworkBasicTest('test_train_handwritten_digit_recognition'))
-    suite.addTest(NeuralNetworkBasicTest('test_pred_handwritten_digit_recognition'))
+    suite.addTest(NeuralNetworkBasicTest('test_set_input_layer'))
+    suite.addTest(NeuralNetworkBasicTest('test_add_one_layer'))
+    suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
+    suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
+    suite.addTest(NeuralNetworkBasicTest('test_back_propagation'))
 
     # Run the test suite
     runner = unittest.TextTestRunner()
     runner.run(suite)
-
-    # TODO questions 'check notations and formulas' -> https://d2l.ai/chapter_multilayer-perceptrons/backprop.html

@@ -1,70 +1,55 @@
-def read_data(file_name: str):
-        # Prepare data for training process
-    with open(f"./data/{file_name}", "r") as training_data_file:
-        data_list = training_data_file.readlines()
-    data_list = list(map(lambda x : x.split(','), data_list))
-    return data_list   
+import unittest
+from dataset_n00b import read_mnist_test_data, read_mnist_train_data
+from nerual_n00b import NeuralNetwork
 
 # TESTS
 class NeuralNetworkBasicTest(unittest.TestCase):    
     def setUp(self):
-        #Test data for Neural Net processin
         self.nn = NeuralNetwork()
-        #28x28-pixel square = 784 features, representing a handwritten digit (0 to 9).
-        train_data_list = read_data("mnist_train_100.csv")
-        self.image_data = train_data_list[0][1:]
 
-    def test_add_input_layer(self):
-        self.nn.add_input_layer(self.image_data)
-        self.nn.print_nn()        
-        self.assertEqual(len(self.nn.layers[0]), 784)
+    def test_train_handwritten_digit_recognition(self):
+        inputs_list, targets_list = read_mnist_train_data()
+        self.nn.set_input_layer(features=inputs_list[0])
+        self.nn.add_layer(neurons_in_layer=100)
+        self.nn.add_layer(neurons_in_layer=10)
 
-    def test_add_one_layer(self):
-        self.nn.add_input_layer(self.image_data)
-        self.nn.add_layer(neurons_in_layer=3)
-        self.nn.print_nn()  
-        self.assertEqual(len(self.nn.layers[1]), 3)
-        #self.assertEqual(len(self.nn.layers[1][0].weights), 3)
-    
-    def test_add_two_layers(self):
-        self.nn.add_input_layer(self.image_data)
-        self.nn.add_layer(neurons_in_layer=3)
-        self.nn.add_layer(neurons_in_layer=2)
-        self.nn.print_nn()  
-        self.assertEqual(len(self.nn.layers[2]), 2)
+        self.nn.train(inputs_list, targets_list, learning_rate=0.01, epoch=1)
+        self.nn.save_model("./trained_nn.pkl")
 
-    def test_forward_propagation(self):        
-        self.nn.add_input_layer(features=self.image_data)
-        self.nn.add_layer(neurons_in_layer=3)
-        self.nn.forward_propagation()
-        
-    def test_back_propagation(self):        
-        #self.nn.add_input_layer(self.image_data)
-        #TODO constructor for - features 
-        self.nn.add_input_layer(features=[1,2,3])
-        self.nn.add_layer(neurons_in_layer=5)
-        self.nn.add_layer(neurons_in_layer=3)
-        self.nn.add_layer(neurons_in_layer=2)
-        self.nn.forward_propagation()
-        #We have 2 neurons in the output layer, target output should have 2 values. Amount of neurons 
-        self.nn.backward_propagation(input_data=[1,2], expected_output=[0.2, 0.3])        
-        #self.nn.backward_propagation(input_data=self.image_data, expected_output=[0, 0, 1, 0, 0, 0, 0, 0, 0, 0])        
+    def test_pred_handwritten_digit_recognition(self):
+        # 10k trainig dataset:
+        # predicted vector   ->  [0.13, 0.86, 0.55, 0.45, 0.25, 0.35, 0.57, 0.24, 0.39, 0.43]
+        # real target vector ->  [0.01, 0.99, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
 
+        inputs_list, targets_list = read_mnist_test_data()
+        loaded_nn = self.nn.load_model("./trained_nn.pkl")
+
+        predicted_outputs = []
+        for i in range(len(inputs_list)):
+            predicted_vector = loaded_nn.pred(inputs_list[i])
+            formatted_predicted_vector = [
+                float(f'{num:.2f}') for num in predicted_vector]
+            print("predicted vector   -> ", formatted_predicted_vector)
+            print("real target vector -> ", targets_list[i])
+
+            predicted_outputs.append(predicted_vector)
+
+        res = loaded_nn.calculate_accuracy(
+            predicted_outputs[:10], targets_list[:10])
+        # 42k damples = Accuracy =  0.9
+        print("Accuracy = ", res)
+
+
+  
 
 if __name__ == '__main__':
     # Create a test suite
     suite = unittest.TestSuite()
-    #suite.addTest(NeuralNetworkBasicTest('test_add_input_layer'))
-    #suite.addTest(NeuralNetworkBasicTest('test_add_one_layer'))
-    #suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
-    #suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
-    #suite.addTest(NeuralNetworkBasicTest('test_back_propagation'))
-    
-    suite.addTest(NeuralNetworkBasicTest('test_matrices_multiplication'))
+    suite.addTest(NeuralNetworkBasicTest('test_train_handwritten_digit_recognition'))
+    suite.addTest(NeuralNetworkBasicTest('test_pred_handwritten_digit_recognition'))
 
     # Run the test suite
     runner = unittest.TextTestRunner()
     runner.run(suite)
-    
+
     # TODO questions 'check notations and formulas' -> https://d2l.ai/chapter_multilayer-perceptrons/backprop.html
-    

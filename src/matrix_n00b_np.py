@@ -3,7 +3,7 @@ import numpy as np
 
 class MatrixNoobNp:
     '''
-    Working with matrices
+    Custom class for working with matrices
     '''
 
     def is_matrix(self, matrix):
