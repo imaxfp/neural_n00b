@@ -45,8 +45,8 @@ class NeuralNetworkBasicTest(unittest.TestCase):
 if __name__ == '__main__':
     # Create a test suite
     suite = unittest.TestSuite()
-    suite.addTest(NeuralNetworkBasicTest('test_train_handwritten_digit_recognition'))
-    #suite.addTest(NeuralNetworkBasicTest('test_pred_handwritten_digit_recognition'))
+    #suite.addTest(NeuralNetworkBasicTest('test_train_handwritten_digit_recognition'))
+    suite.addTest(NeuralNetworkBasicTest('test_pred_handwritten_digit_recognition'))
 
     # Run the test suite
     runner = unittest.TextTestRunner()
