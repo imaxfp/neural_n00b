@@ -3,6 +3,7 @@ from dataset_n00b import read_mnist_test_data, read_mnist_train_data
 from nerual_n00b import NeuralNetwork
 
 # TESTS
+
 class NeuralNetworkBasicTest(unittest.TestCase):    
     def setUp(self):
         self.nn = NeuralNetwork()
