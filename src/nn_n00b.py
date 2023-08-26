@@ -3,8 +3,8 @@ from typing import List
 from collections import deque
 import numpy as np
 import math
-from matrix_n00b_np import MatrixNoobNp
 import pickle
+from matrix.matrix_n00b_np import MatrixNoobNp
 
 
 """ 
@@ -135,11 +135,11 @@ class NeuralNetwork:
     def forward_propagation(self):
         """
         Forward Propagation in Neural Networks:
-        The main idea behind forward propagation is to pass the input data through each layer of the neural network, 
-        successively transforming it using weights and activation functions. The final output is a prediction based on the
+        The main idea behind forward propagation is to pass the input data through each layer of the neural network (from left to rigth by layers) 
+        successively transforming it using WEIGHTS and ACTIVATION functions. The final output is a prediction based on the
         transformed input. This process involves:
         1. Multiplying the input by the layer's weights (matrix multiplication).
-        2. Adding biases to the result.
+        2. Adding biases to the result. (will be added)
         3. Applying an activation function to introduce non-linearity.
         This is done for each layer until the final layer produces the network's output.
         """
@@ -164,8 +164,7 @@ class NeuralNetwork:
         # Use activation function for calulation outputs for the each node
         for i, layer in enumerate(layers_nodes_output):
             for j, output in enumerate(layer):
-                layers[i][j].feature_x_neuron_output = self.activation_sigmoid(
-                    output)
+                layers[i][j].feature_x_neuron_output = self.activation_sigmoid(output)
 
     def backward_propagation(self, expected_output_target: list, learning_rate: float):
         """
@@ -243,6 +242,7 @@ class NeuralNetwork:
                 res = learning_rate * np.array(delta_errors_by_layers[i][j])
                 node.weights = (np.array(node.weights) + np.array(res)).tolist()
 
+# TODO implemet different derivatives 'activation function derivative during back prop'
     def sigmoid_derivative(self, x):
         return x * (1 - x)
 
@@ -292,19 +292,17 @@ class NeuralNetwork:
     def train(self, inputs_list, targets_list, learning_rate, epoch):
 
         for e in range(epoch):
-            print('@@@@@@@ epoch -> ', e)
+            print('@@@@@@@@@@@@@@@@@@@@@  epoch -> ', e)
             for i in range(len(inputs_list)):
                 print(' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> data samle -> ', i)
                 self.set_input_layer(inputs_list[i])
                 self.forward_propagation()
-                self.backward_propagation(
-                    expected_output_target=targets_list[i], learning_rate=learning_rate)
+                self.backward_propagation(expected_output_target=targets_list[i], learning_rate=learning_rate)
 
     def pred(self, input):
         self.set_input_layer(input)
         self.forward_propagation()
-        output_lauer_outputs = [
-            n.feature_x_neuron_output for n in self.layers[-1]]
+        output_lauer_outputs = [n.feature_x_neuron_output for n in self.layers[-1]]
         return output_lauer_outputs
 
     def calculate_accuracy(self, predicted, target):
@@ -320,6 +318,8 @@ class NeuralNetwork:
         total_predictions = len(predicted)
         accuracy = correct_predictions / total_predictions
         return accuracy
+    
+    #TODO build confusion matrix 
 
     def print_nn(self):
         print("print your nn:")
@@ -341,7 +341,6 @@ class NeuralNetwork:
             for index, node in enumerate(layer):
                 print(
                     f"index -> {index}, neuron -> {node}, weights -> {len(node.weights)}, weight data -> {node.weights}")
-                # print(f"Neuron output x -> {node.feature_x_neuron_output}")
 
     def save_model(self, filename):
         with open(filename, 'wb') as file:
@@ -400,10 +399,9 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         self.nn.forward_propagation()
         self.nn.backward_propagation(expected_output_target=expected, learning_rate=0.01)
 
-   
+
 
 if __name__ == '__main__':
-    # Create a test suite
     suite = unittest.TestSuite()
     suite.addTest(NeuralNetworkBasicTest('test_set_input_layer'))
     suite.addTest(NeuralNetworkBasicTest('test_add_one_layer'))

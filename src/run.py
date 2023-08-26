@@ -1,6 +1,6 @@
 import unittest
 from dataset_n00b import read_mnist_test_data, read_mnist_train_data
-from nerual_n00b import NeuralNetwork
+from nn_n00b import NeuralNetwork
 
 # TESTS
 class NeuralNetworkBasicTest(unittest.TestCase):    
@@ -13,7 +13,7 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         self.nn.add_layer(neurons_in_layer=100)
         self.nn.add_layer(neurons_in_layer=10)
 
-        self.nn.train(inputs_list, targets_list, learning_rate=0.01, epoch=1)
+        self.nn.train(inputs_list, targets_list, learning_rate=0.1, epoch=1)
         self.nn.save_model("./trained_nn.pkl")
 
     def test_pred_handwritten_digit_recognition(self):
@@ -36,16 +36,14 @@ class NeuralNetworkBasicTest(unittest.TestCase):
 
         res = loaded_nn.calculate_accuracy(
             predicted_outputs[:10], targets_list[:10])
-        # 42k damples = Accuracy =  0.9
+        # 42k samples = Accuracy =  0.9
         print("Accuracy = ", res)
-
-
   
 
 if __name__ == '__main__':
     # Create a test suite
     suite = unittest.TestSuite()
-    #suite.addTest(NeuralNetworkBasicTest('test_train_handwritten_digit_recognition'))
+    suite.addTest(NeuralNetworkBasicTest('test_train_handwritten_digit_recognition'))
     suite.addTest(NeuralNetworkBasicTest('test_pred_handwritten_digit_recognition'))
 
     # Run the test suite
