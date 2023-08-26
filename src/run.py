@@ -1,5 +1,5 @@
 import unittest
-from dataset_n00b import read_mnist_test_data, read_mnist_train_data
+from dataset_service import read_mnist_test_data, read_mnist_train_data
 from nn_n00b import NeuralNetwork
 
 # TESTS

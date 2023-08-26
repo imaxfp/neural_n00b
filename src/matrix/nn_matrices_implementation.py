@@ -1,5 +1,6 @@
 import numpy
 import numpy as np
+import scipy
 
 # neural network class definition
 class neuralNetwork:
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     n = neuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
 
     # Prepare data for training process
-    with open("./data/mnist_test_10k.csv", "r") as training_data_file:
+    with open("./data/mnist_test_10k.csv, r") as training_data_file:
         training_data_list = training_data_file.readlines()
     # train the neural network
 
