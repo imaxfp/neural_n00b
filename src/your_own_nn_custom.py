@@ -1,13 +1,6 @@
 import numpy
 import numpy as np
 
-# scipy.special for the sigmoid function expit()
-import scipy.special
-
-# library for plotting arrays
-import matplotlib.pyplot
-
-
 # neural network class definition
 class neuralNetwork:
     # initialise the neural network
@@ -110,7 +103,7 @@ if __name__ == "__main__":
     n = neuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
 
     # Prepare data for training process
-    with open("./data/mnist_train_100.csv", "r") as training_data_file:
+    with open("./data/mnist_test_10k.csv", "r") as training_data_file:
         training_data_list = training_data_file.readlines()
     # train the neural network
 
