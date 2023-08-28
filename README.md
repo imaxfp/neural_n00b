@@ -4,7 +4,8 @@
 #### The main idea of the NN is education purpose. 
 
 
-TODO1 Max:
+TODO1 Max: Google Colab or Binder (for hosting notebooks)
+
 - add different activation functions and derivatives 
 - add visualisation for the NN
 - visualisation and add 3 lists (LOSS, Acuracy for validation dataset and test dataset) matplotlib or streamlit. 

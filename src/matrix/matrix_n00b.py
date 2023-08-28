@@ -164,8 +164,7 @@ class NeuralNetworkBasicTest(unittest.TestCase):
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(NeuralNetworkBasicTest('test_matrices_multiplication'))
-    suite.addTest(NeuralNetworkBasicTest(
-        'test_matrices_multiplication_different_m_size'))
+    suite.addTest(NeuralNetworkBasicTest('test_matrices_multiplication_different_m_size'))
 
     suite.addTest(NeuralNetworkBasicTest('test_transpose'))
 

@@ -143,6 +143,7 @@ class NeuralNetwork:
         3. Applying an activation function to introduce non-linearity.
         This is done for each layer until the final layer produces the network's output.
         """
+        print("@@@ - forward propagation:")
 
         input_data = self.layers[0]
         layers = self.layers[1:]
@@ -180,61 +181,62 @@ class NeuralNetwork:
 
         https://www.youtube.com/watch?v=Ilg3gGewQ5U&t=3s&ab_channel=3Blue1Brown
         """
+        print("@@@ - backward propagation:")
 
         delta_error_weights_matrix = None
         delta_errors_by_layers = []
-        for i in range(len(self.layers)-1, 0, -1):
-            right_hand_side_layer = self.layers[i]
-            left_hand_side_layer = self.layers[i-1]
 
-            right_hand_side_layer_outputs = [n.feature_x_neuron_output for n in right_hand_side_layer]
-            left_hand_side_layer_outputs = [n.feature_x_neuron_output for n in left_hand_side_layer]
+        print("$$$ Output layer processing")
+        #outut layer
+        right_hand_side_layer_outputs = [n.feature_x_neuron_output for n in self.layers[-1]]
+        #the last hidden layer
+        left_hand_side_layer_outputs = [n.feature_x_neuron_output for n in self.layers[-2]]
+        left_hand_side_layer_outputs_matrix = self.matrix_n00b.list_to_matrix(left_hand_side_layer_outputs, len(left_hand_side_layer_outputs))
 
-            # convert left_hand_side_layer_outputs to the matrix
-            left_hand_side_layer_outputs_matrix = self.matrix_n00b.list_to_matrix(
-                left_hand_side_layer_outputs, len(left_hand_side_layer_outputs))
-            right_hand_side_activations_matrix = self.matrix_n00b.list_to_matrix(
-                right_hand_side_layer_outputs, len(right_hand_side_layer_outputs))
+        #calculare delta error for the last output layer 
+        diff = (np.array(expected_output_target) - np.array(right_hand_side_layer_outputs))
+        delta_err_output = (diff * self.sigmoid_derivative(np.array(right_hand_side_layer_outputs))).tolist()
 
-            # if output layer
-            if i == len(self.layers[:-1]):
-                # left hand side weights -> right hand side output error
-                # hidden_errors = numpy.dot(self.who.T, output_errors)
-                delta_err_output = self.calculate_output_delta(output_actual=expected_output_target,
-                                                               output_predicted=right_hand_side_layer_outputs)
-                delta_err_output = self.matrix_n00b.list_to_matrix(
-                    delta_err_output, len(delta_err_output))
+        delta_err_output_matrix = self.matrix_n00b.list_to_matrix(delta_err_output, len(delta_err_output))
+        delta_err_output_matrix_T = self.matrix_n00b.transpose(delta_err_output_matrix)
+        # calculate gradient weights for the last layer
+        delta_error_weights_matrix = self.matrix_n00b.matrices_multiplication(delta_err_output_matrix_T, left_hand_side_layer_outputs_matrix)
+        delta_errors_by_layers.append(delta_error_weights_matrix)
 
-            # if hidden layer
-            elif i > 1:
-                # hidden layer error is the output_errors, split by weights, recombined at hidden nodes
-                # delta_error_weights_matrix, left_hand_side_activations, right_hand_side_weights):
+        if len(self.layers) > 3:
+            self.back_propagation_hidden_layers(delta_errors_by_layers)
 
-                right_hand_side_weights = [
-                    n.weights for n in right_hand_side_layer]
-                delta_err_output = self.calculate_hidden_delta(delta_error_weights_matrix,
-                                                               left_hand_side_layer_outputs,
-                                                               right_hand_side_weights)
-            # if input layer
-            else:
-                # self.wih += self.lr * numpy.dot(
-                #    (hidden_errors * hidden_outputs * (1.0 - hidden_outputs)),
-                #    numpy.transpose(inputs))
-                weights_of_first_hidden_layer = [
-                    n.weights for n in right_hand_side_layer]
-                delta_err_output = self.calculate_input_delta(delta_error_weights_matrix=delta_error_weights_matrix,
-                                                              input_features=left_hand_side_layer_outputs,
-                                                              weights_of_first_hidden_layer=weights_of_first_hidden_layer)
+        print("$$$ Input layer processing")   
+        input_layer = self.layers[0]  
+        first_hidden_layer = self.layers[1] 
 
-            # Calculate errors for the right_hand_side_layer_outputs
-            delta_error_matrix_T = self.matrix_n00b.transpose(delta_err_output)
+        left_hand_side_features = [n.feature_x_neuron_output for n in input_layer] 
+        right_hand_side_weights = [n.weights for n in first_hidden_layer]
 
-            # calculate gradient for the weights in the last layer
-            delta_error_weights_matrix = self.matrix_n00b.matrices_multiplication(delta_error_matrix_T,
-                                                                                  left_hand_side_layer_outputs_matrix)
-            delta_errors_by_layers.append(delta_error_weights_matrix)
 
-        #Update weights for the node
+        # Calculate the delta for the input layer based on the delta from the output layer and weights of the first hidden layer.
+        # Multiply the delta_output_matrix with the weights_of_first_hidden_layer to get the resulting matrix
+        # representing the effect of the output delta values on the input layer before considering activation function derivative.
+        delta_output_res = self.matrix_n00b.matrices_multiplication(delta_error_weights_matrix, right_hand_side_weights)
+
+        # Element-wise multiplication of the first row of the resulting matrix (delta_output_res[0])
+        # with the derivative of the sigmoid function of the first input feature.
+        # This step incorporates the effect of the activation function on the input layer's delta values.
+        input_to_hiden_delta = np.array(delta_output_res[0]) * self.sigmoid_derivative(np.array(left_hand_side_features[0]))
+
+        # Convert the NumPy array back to a list and return.
+        delta_err_output = self.matrix_n00b.list_to_matrix(input_to_hiden_delta.tolist(), len(input_to_hiden_delta.tolist()))
+        
+        # Calculate errors for the right_hand_side_layer_outputs
+#        delta_error_matrix_T = self.matrix_n00b.transpose(delta_err_output)
+        left_hand_side_layer_outputs_matrix_T = self.matrix_n00b.transpose(left_hand_side_layer_outputs_matrix) 
+
+        # Calculate gradient for the weights in the last layer
+        delta_error_weights_matrix = self.matrix_n00b.matrices_multiplication(left_hand_side_layer_outputs_matrix_T, delta_err_output)
+        delta_errors_by_layers.append(delta_error_weights_matrix)
+
+        print("$$$ update weights")       
+        #Update weights for the node in the each of the layer 
         layers_skeep_input_layer = self.layers[1:]
         layers_skeep_input_layer.reverse()
         for i, layer in enumerate(layers_skeep_input_layer):
@@ -242,55 +244,39 @@ class NeuralNetwork:
                 res = learning_rate * np.array(delta_errors_by_layers[i][j])
                 node.weights = (np.array(node.weights) + np.array(res)).tolist()
 
+
+    def back_propagation_hidden_layers(self, delta_errors_by_layers):
+        print("STEP 2: Hidden layers processing")
+        hiddel_layers = self.layers[1:] 
+        for i in range(len(hiddel_layers)-1, 0, -1):
+            right_hand_side_layer = self.layers[i]
+            left_hand_side_layer = self.layers[i-1]
+
+            right_hand_side_layer_outputs = [n.feature_x_neuron_output for n in right_hand_side_layer]
+            left_hand_side_layer_outputs = [n.feature_x_neuron_output for n in left_hand_side_layer]
+
+            # convert left_hand_side_layer_outputs to the matrix
+            left_hand_side_layer_outputs_matrix = self.matrix_n00b.list_to_matrix(left_hand_side_layer_outputs, len(left_hand_side_layer_outputs))
+
+            right_hand_side_weights = [n.weights for n in right_hand_side_layer]
+            delta_output_res = self.matrix_n00b.matrices_multiplication(delta_error_weights_matrix, right_hand_side_weights)
+            #TODO clarify sigmoid derivative and FIX np 
+            delta_hidden = np.array(delta_output_res) * self.sigmoid_derivative(np.array(left_hand_side_layer_outputs))
+            delta_err_output_matrix_h = self.matrix_n00b.list_to_matrix(delta_hidden.tolist(), len(delta_hidden.tolist()))
+            
+            #Transpose matrices
+            delta_err_output_matrix_T = self.matrix_n00b.transpose(delta_err_output_matrix_h)
+            
+            # Calculate errors for the right_hand_side_layer_outputs
+            delta_error_weights_matrix = self.matrix_n00b.matrices_multiplication(left_hand_side_layer_outputs_matrix, delta_err_output_matrix_T)
+            delta_errors_by_layers.append(delta_error_weights_matrix)
+                    
+
 # TODO implemet different derivatives 'activation function derivative during back prop'
     def sigmoid_derivative(self, x):
         return x * (1 - x)
 
-    def calculate_output_delta(self, output_actual, output_predicted):
-        diff = (np.array(output_actual) - np.array(output_predicted))
-        delta_output = diff * \
-            self.sigmoid_derivative(np.array(output_predicted))
-        return delta_output.tolist()
-
-    def calculate_hidden_delta(self, delta_error_weights_matrix, left_hand_side_activations, right_hand_side_weights):
-
-        #        delta_output_matrix = self.matrix_n00b.list_to_matrix(delta_output, len(delta_output))
-        #        right_hand_side_weights_T = self.matrix_n00b.transpose(right_hand_side_weights)
-
-        delta_output_res = self.matrix_n00b.matrices_multiplication(
-            delta_error_weights_matrix, right_hand_side_weights)
-
-        delta_hidden = np.array(
-            delta_output_res) * self.sigmoid_derivative(np.array(left_hand_side_activations))
-        return self.matrix_n00b.list_to_matrix(delta_hidden.tolist(), len(delta_hidden.tolist()))
-
-    def calculate_input_delta(self, delta_error_weights_matrix, input_features, weights_of_first_hidden_layer):
-        """
-        Calculate the delta for the input layer based on the delta from the output layer and weights of the first hidden layer.
-
-        :param delta_output: List of delta values from the output layer.
-        :param input_features: List of input features to the network.
-        :param weights_of_first_hidden_layer: Matrix representing the weights connecting the input layer to the first hidden layer.
-        :return: List representing the delta values for the input layer.
-        """
-
-        # Multiply the delta_output_matrix with the weights_of_first_hidden_layer to get the resulting matrix
-        # representing the effect of the output delta values on the input layer before considering activation function derivative.
-
-        delta_output_res = self.matrix_n00b.matrices_multiplication(
-            delta_error_weights_matrix, weights_of_first_hidden_layer)
-
-        # Element-wise multiplication of the first row of the resulting matrix (delta_output_res[0])
-        # with the derivative of the sigmoid function of the first input feature.
-        # This step incorporates the effect of the activation function on the input layer's delta values.
-        input_to_hiden_delta = np.array(
-            delta_output_res[0]) * self.sigmoid_derivative(np.array(input_features[0]))
-
-        # Convert the NumPy array back to a list and return.
-        return self.matrix_n00b.list_to_matrix(input_to_hiden_delta.tolist(), len(input_to_hiden_delta.tolist()))
-
     def train(self, inputs_list, targets_list, learning_rate, epoch):
-
         for e in range(epoch):
             print('@@@@@@@@@@@@@@@@@@@@@  epoch -> ', e)
             for i in range(len(inputs_list)):
@@ -393,21 +379,33 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         expected = [1.1, 2.2]
         self.nn.set_input_layer(features=input_data)
         self.nn.add_layer(neurons_in_layer=4)
-        # TODO uncomment me and fix architecture more than 2 layers
-        # self.nn.add_layer(neurons_in_layer=4)
         self.nn.add_layer(neurons_in_layer=2)
         self.nn.forward_propagation()
         self.nn.backward_propagation(expected_output_target=expected, learning_rate=0.01)
+
+    def test_back_propagation_3_layers(self):
+        input_data = [1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
+        expected = [1.1, 2.2]
+        self.nn.set_input_layer(features=input_data)
+        self.nn.add_layer(neurons_in_layer=100)
+        self.nn.add_layer(neurons_in_layer=50)
+        self.nn.add_layer(neurons_in_layer=25)
+        self.nn.add_layer(neurons_in_layer=2)
+        self.nn.forward_propagation()
+        self.nn.backward_propagation(expected_output_target=expected, learning_rate=0.01)    
 
 
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(NeuralNetworkBasicTest('test_set_input_layer'))
-    suite.addTest(NeuralNetworkBasicTest('test_add_one_layer'))
-    suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
-    suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
+    #suite.addTest(NeuralNetworkBasicTest('test_set_input_layer'))
+    #suite.addTest(NeuralNetworkBasicTest('test_add_one_layer'))
+    #suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
+    #suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
     suite.addTest(NeuralNetworkBasicTest('test_back_propagation'))
+    #suite.addTest(NeuralNetworkBasicTest('test_back_propagation_3_layers'))
+
+    
 
     # Run the test suite
     runner = unittest.TextTestRunner()

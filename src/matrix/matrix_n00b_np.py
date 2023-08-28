@@ -65,8 +65,8 @@ class MatrixNoobNp:
         # Get and print the shapes of the matrices
         shape_mat1 = (len(mat1), len(mat1[0]))
         shape_mat2 = (len(mat2), len(mat2[0]))
-        print(f'Shape of first matrix: {shape_mat1}')
-        print(f'Shape of second matrix: {shape_mat2}')
+        print(f'Matrices multiplication -> shape of first matrix: {shape_mat1}')
+        print(f'Matrices multiplication -> shape of second matrix: {shape_mat2}')
 
         # Check if number of columns in first matrix equals number of rows in second matrix
         if shape_mat1[1] != shape_mat2[0]:
@@ -98,7 +98,7 @@ class MatrixNoobNp:
         if not self.is_matrix(matrix):
             raise ValueError("Transpose operation is available for matrix only")
         
-        print("matrix before T:")
+        #print("matrix before T:")
         #self.print_matrix(matrix)
 
         # Convert input list to numpy array for efficient calculation
@@ -110,7 +110,7 @@ class MatrixNoobNp:
         # Convert the resulting numpy array back to a list to maintain the expected return type
         transposed = np_transposed.tolist()
 
-        print("matrix after Transpose:")
+        #print("matrix after Transpose:")
         #self.print_matrix(transposed)
 
         return transposed  
