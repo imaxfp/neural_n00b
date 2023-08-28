@@ -8,12 +8,12 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         self.nn = NeuralNetwork()
 
     def test_train_handwritten_digit_recognition(self):
-        inputs_list, targets_list = read_mnist_train_data()
+        inputs_list, targets_list = read_mnist_train_data(samples=100)
         self.nn.set_input_layer(features=inputs_list[0])
         self.nn.add_layer(neurons_in_layer=100)
         self.nn.add_layer(neurons_in_layer=10)
 
-        self.nn.train(inputs_list, targets_list, learning_rate=0.1, epoch=1)
+        self.nn.train(inputs_list, targets_list, learning_rate=0.1, epoch=20)
         self.nn.save_model("./trained_nn.pkl")
 
     def test_pred_handwritten_digit_recognition(self):
@@ -21,7 +21,7 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         # predicted vector   ->  [0.13, 0.86, 0.55, 0.45, 0.25, 0.35, 0.57, 0.24, 0.39, 0.43]
         # real target vector ->  [0.01, 0.99, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
 
-        inputs_list, targets_list = read_mnist_test_data()
+        inputs_list, targets_list = read_mnist_test_data(samples=30)
         loaded_nn = self.nn.load_model("./trained_nn.pkl")
 
         predicted_outputs = []
@@ -34,19 +34,31 @@ class NeuralNetworkBasicTest(unittest.TestCase):
 
             predicted_outputs.append(predicted_vector)
 
-        res = loaded_nn.calculate_accuracy(
-            predicted_outputs[:10], targets_list[:10])
+        res = loaded_nn.calculate_accuracy(predicted_outputs, targets_list)
         # 42k samples = Accuracy =  0.9
         print("Accuracy = ", res)
   
 
-if __name__ == '__main__':
-    # Create a test suite
+if __name__ == '__main__':    
     suite = unittest.TestSuite()
-    suite.addTest(NeuralNetworkBasicTest('test_train_handwritten_digit_recognition'))
+
+    
+    """
+    train model:
+    samples=100
+    epoch=20
+    learning_rate=0.1
+
+    validate model    
+    samples=30
+    predicted vector   ->  [0.01, 0.8, 0.02, 0.01, 0.04, 0.07, 0.01, 0.11, 0.01, 0.02]
+    real target vector ->  [0.01, 0.99, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+    Accuracy =  0.7241379310344828
+    """
+    #suite.addTest(NeuralNetworkBasicTest('test_train_handwritten_digit_recognition'))
     suite.addTest(NeuralNetworkBasicTest('test_pred_handwritten_digit_recognition'))
 
-    # Run the test suite
+
     runner = unittest.TextTestRunner()
     runner.run(suite)
 

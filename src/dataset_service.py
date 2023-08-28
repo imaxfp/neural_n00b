@@ -19,11 +19,12 @@ def read_mnist_data(output_nodes_amount: int, csv_path: str):
         inputs_list.append(input.tolist())
         targets_list.append(target.tolist())
 
-    return inputs_list[1:20], targets_list[1:20]
-    #return inputs_list[1:], targets_list[1:]
+    return inputs_list, targets_list
         
-def read_mnist_train_data():
-    return read_mnist_data(output_nodes_amount=10, csv_path="./data/mnist_test_10k.csv")
+def read_mnist_train_data(samples=200):
+    inputs_list, targets_list = read_mnist_data(output_nodes_amount=10, csv_path="./data/mnist_test_10k.csv")
+    return inputs_list[1:samples], targets_list[1:samples]
 
-def read_mnist_test_data():
-    return read_mnist_data(output_nodes_amount=10, csv_path="./data/mnist_test_10k.csv")
+def read_mnist_test_data(samples=20):
+    inputs_list, targets_list = read_mnist_data(output_nodes_amount=10, csv_path="./data/mnist_test_10k.csv")
+    return inputs_list[1:samples], targets_list[1:samples]
