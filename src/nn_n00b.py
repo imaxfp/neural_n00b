@@ -99,10 +99,6 @@ class NeuralNetwork:
         return 1 / (1 + math.exp(-x))
 
     @staticmethod
-    def sigmoid_derivative(x):
-        return x * (1 - x)
-
-    @staticmethod
     def calculate_loss(output, expected_output):
         """
         Mean Squared Error (MSE) loss. 
@@ -181,108 +177,70 @@ class NeuralNetwork:
 
         https://www.youtube.com/watch?v=Ilg3gGewQ5U&t=3s&ab_channel=3Blue1Brown
         """
-        delta_errors_matrix_by_layers = []
-
         # Calculate backward propagation error deltas for the ouput layer
-        output_delta_errors_matrix = self.back_propagation_output_layer(expected_output_target)
-        delta_errors_matrix_by_layers.append(output_delta_errors_matrix)
-
-        # Calculate backward propagation error deltas for the hidden layers
-        if len(self.layers) > 3:
-            self.back_propagation_hidden_layers(delta_errors_matrix_by_layers, output_delta_errors_matrix)
-
-        # Calculate backward propagation error deltas for the input layer
-        input__delta_errors_matrix = self.back_propagation_input_layer(delta_errors_matrix_by_layers[-1])
-        delta_errors_matrix_by_layers.append(input__delta_errors_matrix)
-
-        print("$$$ Backward propagation - update weights")       
-        #Update weights for the node in the each of the layer 
-        layers_skeep_input_layer = self.layers[1:]
-        layers_skeep_input_layer.reverse()
-        for i, layer in enumerate(layers_skeep_input_layer):
-            for j, node in enumerate(layer):
-                res = learning_rate * np.array(delta_errors_matrix_by_layers[i][j])
-                node.weights = (np.array(node.weights) + np.array(res)).tolist()
+        delta_errors_by_layers_lifo = self.back_propagation_errors_calculation(expected_output_target)
+        self.back_propagation_update_weights(delta_errors_by_layers_lifo, learning_rate)
 
 
-    def back_propagation_output_layer(self, expected_output_target):        
-        print("$$$ Backward propagation - output layer processing")
-        #outut layer
-        right_hand_side_layer_outputs = [n.feature_x_neuron_output for n in self.layers[-1]]
-        #the last hidden layer
-        left_hand_side_layer_outputs = [n.feature_x_neuron_output for n in self.layers[-2]]
-        left_hand_side_layer_outputs_matrix = self.matrix_n00b.list_to_matrix(left_hand_side_layer_outputs, len(left_hand_side_layer_outputs))
 
-        #calculare delta error for the last output layer 
-        diff = (np.array(expected_output_target) - np.array(right_hand_side_layer_outputs))
-        delta_err_output = (diff * self.sigmoid_derivative(np.array(right_hand_side_layer_outputs))).tolist()
-
-        delta_err_output_matrix = self.matrix_n00b.list_to_matrix(delta_err_output, len(delta_err_output))
-        delta_err_output_matrix_T = self.matrix_n00b.transpose(delta_err_output_matrix)
-        # calculate gradient weights for the last layer
-        delta_errors_weights_matrix = self.matrix_n00b.matrices_multiplication(delta_err_output_matrix_T, left_hand_side_layer_outputs_matrix)
-        return delta_errors_weights_matrix 
-
-
-    def back_propagation_hidden_layers(self, delta_errors_matrix_by_layers, delta_errors_matrix):
-        print("$$$ Backward propagation - hidden layers processing 'from right to left <-'")
-        hiddel_layers = self.layers[1:] 
-        for i in range(len(hiddel_layers)-1, 0, -1):
-            right_hand_side_layer = self.layers[i]
-            left_hand_side_layer = self.layers[i-1]
-
-            right_hand_side_layer_outputs = [n.feature_x_neuron_output for n in right_hand_side_layer]
-            left_hand_side_layer_outputs = [n.feature_x_neuron_output for n in left_hand_side_layer]
-
-            # convert left_hand_side_layer_outputs to the matrix
-            left_hand_side_layer_outputs_matrix = self.matrix_n00b.list_to_matrix(left_hand_side_layer_outputs, len(left_hand_side_layer_outputs))
-
-            right_hand_side_weights = [n.weights for n in right_hand_side_layer]
-            delta_output_res = self.matrix_n00b.matrices_multiplication(delta_errors_matrix, right_hand_side_weights)
-            #TODO clarify sigmoid derivative and FIX np 
-            delta_hidden = np.array(delta_output_res) * self.sigmoid_derivative(np.array(left_hand_side_layer_outputs))
-            delta_err_output_matrix_h = self.matrix_n00b.list_to_matrix(delta_hidden.tolist(), len(delta_hidden.tolist()))
-            
-            #Transpose matrices
-            delta_err_output_matrix_T = self.matrix_n00b.transpose(delta_err_output_matrix_h)
-            
-            # Calculate errors for the right_hand_side_layer_outputs
-            delta_errors_matrix = self.matrix_n00b.matrices_multiplication(left_hand_side_layer_outputs_matrix, delta_err_output_matrix_T)
-            delta_errors_matrix_by_layers.append(delta_errors_matrix)
-            return delta_errors_matrix_by_layers 
-
-
-    def back_propagation_input_layer(self, delta_error_weights_matrix):
-        print("$$$ Backward propagation - Input layer processing")   
-        input_layer = self.layers[0]  
-        first_hidden_layer = self.layers[1] 
-
-        left_hand_side_features = [n.feature_x_neuron_output for n in input_layer] 
-        right_hand_side_weights = [n.weights for n in first_hidden_layer]
-        right_hand_side_outputs = [n.feature_x_neuron_output for n in first_hidden_layer] 
-
-
-        # Calculate the delta for the input layer based on the delta from the output layer and weights of the first hidden layer.
-        # Multiply the delta_output_matrix with the weights_of_first_hidden_layer to get the resulting matrix
-        # representing the effect of the output delta values on the input layer before considering activation function derivative.
-        delta_output_res = self.matrix_n00b.matrices_multiplication(delta_error_weights_matrix, right_hand_side_weights)
-
-        # Element-wise multiplication of the first row of the resulting matrix (delta_output_res[0])
-        # with the derivative of the sigmoid function of the first input feature.
-        # This step incorporates the effect of the activation function on the input layer's delta values.
-        input_to_hiden_delta = np.array(delta_output_res[0]) * self.sigmoid_derivative(np.array(left_hand_side_features[0]))
-
-        # Convert the NumPy array back to a list and return.
-        delta_err_output = self.matrix_n00b.list_to_matrix(input_to_hiden_delta.tolist(), len(input_to_hiden_delta.tolist()))
+    def back_propagation_errors_calculation(self, expected_output_target):        
+        print("@@@ -> back_propagation_errors_calculation")
         
-        # Calculate errors for the right_hand_side_layer_outputs
-        right_hand_side_outputs_matrix = self.matrix_n00b.list_to_matrix(right_hand_side_outputs, len(right_hand_side_outputs))
-        right_hand_side_outputs_matrix_T = self.matrix_n00b.transpose(right_hand_side_outputs_matrix) 
+        right_hand_side_layer_outputs = [n.feature_x_neuron_output for n in self.layers[-1]]
+            
+        #Calculate errors for the output layer
+        errors_all_layers_lifo = []
+        errors_curent = []
+        print("Current layer is output layer ", len(self.layers))
+        for i in range(0, len(expected_output_target)):
+            diff = expected_output_target[i] - right_hand_side_layer_outputs[i]
+            errors_curent.append(np.array(diff))
+        errors_all_layers_lifo.append(errors_curent)    
+        
+        #Calculate errors for the hidden layers
+        for i in range(1, len(self.layers)):
+            #Pay attention 'self.layers[-i]' means steps from right to left by layers (left_hand_side <- right_hand_side)
+            weights_output_layer = [n.weights for n in self.layers[-i]]
+            
+            weigths_matrix = np.array(weights_output_layer).T
+            error_matrix = np.array(errors_all_layers_lifo[-1])
+            print("Current layer is hidden layer ",len(self.layers) - i)
+            print("weigths_matrix {w_m} * error_matrix {e_m}".format(w_m=weigths_matrix.shape, e_m=error_matrix.shape) )
 
-        # Calculate gradient for the weights in the last layer
-        delta_error_weights_matrix = self.matrix_n00b.matrices_multiplication(right_hand_side_outputs_matrix_T, delta_err_output)
-        return delta_error_weights_matrix 
+            hidden_errors = np.dot(weigths_matrix, error_matrix)    
+            hidden_errors = [np.array(x) for x in hidden_errors]
+            errors_all_layers_lifo.append(hidden_errors)
 
+        errors_all_layers_lifo.reverse()
+        return errors_all_layers_lifo
+    
+    def back_propagation_update_weights(self, delta_errors_by_layers_lifo, learning_rate):
+        print("@@@ -> back_propagation_update_weights")
+        for i in range(1, len(self.layers)):            
+            
+            right_hand_side_outputs = np.array([n.feature_x_neuron_output for n in self.layers[-i]])
+            left_hand_side_outputs = np.array([n.feature_x_neuron_output for n in self.layers[-(i+1)]], ndmin=2)
+
+            output_errors = delta_errors_by_layers_lifo[-i]
+
+            #TODO separate functions implementation for different derivatives. 
+            # Calc error for the each node.
+            derivative_err = (output_errors * right_hand_side_outputs * (1.0 - right_hand_side_outputs))
+            # Derivative_err is array of np.array for the matrix multiplication algorithm. 
+            derivative_err = np.array([np.array([e]) for e in output_errors])
+                              
+
+            print("Current layer is hidden layer ",len(self.layers) - i)
+            print("derivative_err {d_err} * error_matrix {l_h_out}".format(d_err=derivative_err.shape, l_h_out=left_hand_side_outputs.shape) )
+
+            err_weights_matrix = learning_rate * np.dot(derivative_err, left_hand_side_outputs)
+
+            #Update neuron weigths 
+            for j in range(0, len(err_weights_matrix)):
+                neuron = self.layers[-i][j]
+                old_weights = np.array(neuron.weights)
+                updated_weights = old_weights + err_weights_matrix[j]
+                neuron.weights = updated_weights.tolist() 
                     
 
 # TODO implemet different derivatives 'activation function derivative during back prop'
@@ -388,7 +346,7 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         self.assertIsNotNone(self.nn.layers[2][1].feature_x_neuron_output)
 
     def test_back_propagation(self):
-        input_data = [1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
+        input_data = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
         expected = [1.1, 2.2]
         self.nn.set_input_layer(features=input_data)
         self.nn.add_layer(neurons_in_layer=4)
@@ -402,7 +360,7 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         self.nn.set_input_layer(features=input_data)
         self.nn.add_layer(neurons_in_layer=100)
         self.nn.add_layer(neurons_in_layer=50)
-        self.nn.add_layer(neurons_in_layer=25)
+        self.nn.add_layer(neurons_in_layer=27)
         self.nn.add_layer(neurons_in_layer=2)
         self.nn.forward_propagation()
         self.nn.backward_propagation(expected_output_target=expected, learning_rate=0.01)    
@@ -416,9 +374,8 @@ if __name__ == '__main__':
     #suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
     #suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
     suite.addTest(NeuralNetworkBasicTest('test_back_propagation'))
-    #suite.addTest(NeuralNetworkBasicTest('test_back_propagation_3_layers'))
+    suite.addTest(NeuralNetworkBasicTest('test_back_propagation_3_layers'))
 
-    
 
     # Run the test suite
     runner = unittest.TextTestRunner()

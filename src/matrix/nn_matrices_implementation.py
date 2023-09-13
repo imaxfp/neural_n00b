@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # number of input, hidden and output nodes
     # 28x28-pixel square, representing a handwritten digit (0 to 9).
     #input_nodes = 784
-    input_nodes = 3
+    input_nodes = 8
     # second layer 'hidden' layer
     #hidden_nodes = 100
     hidden_nodes = 4
@@ -104,23 +104,23 @@ if __name__ == "__main__":
     n = neuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
 
     # Prepare data for training process
-    with open("./data/mnist_test_10k.csv, r") as training_data_file:
-        training_data_list = training_data_file.readlines()
+    #with open(".data/mnist_test_10k.csv, r") as training_data_file:
+    #    training_data_list = training_data_file.readlines()
     # train the neural network
 
     # TRAIN -> go through all records in the training data set
-    for record in training_data_list:
-        # split the record by the ',' commas
-        all_values = record.split(",")
+    #for record in training_data_list:
+    # split the record by the ',' commas
+    #    all_values = record.split(",")
         # scale and shift the inputs
         #inputs = (numpy.asfarray(all_values[1:]) / 255.0 * 0.99) + 0.01
-        inputs = [1,2,3]
+    inputs = [1,2,3,4,5,6,7,8]
         # create the target output values (all 0.01, except the desired label which is 0.99)
         #targets = numpy.zeros(output_nodes) + 0.01
-        targets = [0.1,0]
+    targets = [0.1,0]
         # all_values[0] is the target label for this record
         #targets[int(all_values[0])] = 0.99
-        n.train(inputs, targets)
+    n.train(inputs, targets)
 
     # TEST -> Verification (Test) check data outside as a customer
     with open("./data/mnist_test_10.csv", "r") as file_test_data:
