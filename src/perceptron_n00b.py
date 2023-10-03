@@ -4,7 +4,7 @@ from collections import deque
 import numpy as np
 import math
 import pickle
-from matrix.matrix_n00b_np import MatrixNoobNp
+from src.matrix.matrix_n00b_np import MatrixNoobNp
 
 
 """ 
