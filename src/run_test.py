@@ -1,5 +1,5 @@
 import unittest
-from dataset_service import read_mnist_data, read_mnist_test_data
+from dataset_service import read_mnist_data
 from perceptron_n00b import NeuralNetwork
 
 # Train perceprtron model for the hand writen digits recognition. 

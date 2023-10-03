@@ -66,29 +66,24 @@ class NeuralNetwork:
         self.matrix_n00b = MatrixNoobNp()
         self.layers = []
 
-    def set_input_layer(self, features: List):
-        """
-        Input layer means list of features for the neural network.
-        Pay attention! Current input layer does not have any parameters, only features.
-        Consider current input layer as a VECTOR features.
-        """
-        input_layer_neurons = [Neuron(feature_x_neuron_output=f) for f in features]
-        if len(self.layers) == 0:
-            self.layers.append(input_layer_neurons)
-        else:
-            self.layers[0] = input_layer_neurons
-
     def add_layer(self, neurons_in_layer: int):
-        # check if we have input layer
-        if self.layers.__len__() > 0:
-            hidden_layers_neurons = []
-            for _ in range(neurons_in_layer):
-                # initialize weights with gaussian distribution
-                left_hand_side_layer_amount_features_x = len(self.layers[-1])
-                weights_gauss = self.weight_gaussian_distribution(left_hand_side_layer_amount_features_x)
-                hidden_layers_neurons.append(Neuron(weights=weights_gauss))
+            #add initial layer. FEATURES layer
+            if len(self.layers) == 0:
+                input_features_layer=[]
+                for i in range(0, neurons_in_layer):
+                    input_features_layer.append(0.1)
+                self.layers.append(input_features_layer)    
+            
+            #add hidden layer
+            else:
+                hidden_layers_neurons = []
+                for _ in range(neurons_in_layer):
+                    # initialize weights with gaussian distribution
+                    left_hand_side_layer_amount_features_x = len(self.layers[-1])
+                    weights_gauss = self.weight_gaussian_distribution(left_hand_side_layer_amount_features_x)
+                    hidden_layers_neurons.append(Neuron(weights=weights_gauss))
 
-            self.layers.append(hidden_layers_neurons)
+                self.layers.append(hidden_layers_neurons)
 
     @staticmethod
     def activation_relu(x: float):
@@ -133,7 +128,7 @@ class NeuralNetwork:
         stddev = 0.1
         return np.random.normal(mean, stddev, (left_hand_side_layer_amount_features_x)).tolist()
 
-    def forward_propagation(self):
+    def forward_propagation(self, input_data):
         """
         Forward Propagation in Neural Networks:
         The main idea behind forward propagation is to pass the input data through each layer of the neural network (from left to rigth by layers) 
@@ -146,10 +141,7 @@ class NeuralNetwork:
         """
         print("@@@ - forward propagation:")
 
-        input_data = self.layers[0]
         layers = self.layers[1:]
-
-        input_features = [[n.feature_x_neuron_output for n in input_data]]
 
         # Calculate forvard signal based on matrices multiplication algorithm
         layers_nodes_output = []
@@ -158,10 +150,12 @@ class NeuralNetwork:
             for node in layer:
                 weights_nodes_in_layer.append(node.weights)
 
-            res = self.matrix_n00b.matrices_multiplication(input_features,
+            input_data_matrix = self.matrix_n00b.list_to_matrix(input_data, len(input_data))    
+
+            res = self.matrix_n00b.matrices_multiplication(input_data_matrix,
                                                            self.matrix_n00b.transpose(weights_nodes_in_layer))
             layers_nodes_output.append(res[0])
-            input_features = res
+            input_data = res[0]
 
         # Use activation function for calulation outputs for the each node
         for i, layer in enumerate(layers_nodes_output):
@@ -224,8 +218,14 @@ class NeuralNetwork:
         for i in range(1, len(self.layers)):            
             
             right_hand_side_outputs = np.array([n.feature_x_neuron_output for n in self.layers[-i]])
-            left_hand_side_outputs = np.array([n.feature_x_neuron_output for n in self.layers[-(i+1)]], ndmin=2)
 
+            #If hidden layer (Neurons)                    
+            if type(self.layers[-(i+1)][0]) is Neuron:                
+                left_hand_side_outputs = np.array([n.feature_x_neuron_output for n in self.layers[-(i+1)]], ndmin=2)            
+            #if inptup layer, in other words input features                 
+            else:
+                left_hand_side_outputs = np.array([n for n in self.layers[-(i+1)]], ndmin=2)
+                                
             output_errors = delta_errors_by_layers_lifo[-i]
 
             #TODO separate functions implementation for different derivatives. 
@@ -251,19 +251,35 @@ class NeuralNetwork:
 # TODO implemet different derivatives 'activation function derivative during back prop'
     def sigmoid_derivative(self, x):
         return x * (1 - x)
+    
+
+    def check_input_features(self, inputs_list):
+        # Check the length of x_features against the length of self.layers[0]
+        if len(inputs_list) != len(self.layers[0]):
+            raise ValueError("Length mismatch between x_features and the first layer.")
+
+        # Check types of values in x_features
+        for feature in inputs_list:
+            if not isinstance(feature, (int, float)):
+                raise TypeError(f"Feature {feature} is not of type int or float.")
+
 
     def train(self, inputs_list, targets_list, learning_rate, epoch):
+
+
+
+
         for e in range(epoch):
             print('@@@@@@@@@@@@@@@@@@@@@  epoch -> ', e)
             for i in range(len(inputs_list)):
+                self.check_input_features(inputs_list[i])
                 print(' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> data samle -> ', i)
-                self.set_input_layer(inputs_list[i])
-                self.forward_propagation()
+                self.forward_propagation(input_data=inputs_list[i])
                 self.backward_propagation(expected_output_target=targets_list[i], learning_rate=learning_rate)
 
     def pred(self, input):
-        self.set_input_layer(input)
-        self.forward_propagation()
+        self.check_input_features(input)
+        self.forward_propagation(input_data=input)
         output_lauer_outputs = [n.feature_x_neuron_output for n in self.layers[-1]]
         return output_lauer_outputs
 
@@ -296,13 +312,14 @@ class NeuralNetwork:
         print("@@@ input layer:")
         for index, node in enumerate(input_layer):
             print(
-                f"index -> {index}, neuron -> {node}, feature -> {node.feature_x_neuron_output}")
+                f"index -> {index}, feature -> {node}")
 
         for index, layer in enumerate(hidden_layers):
             print(f"@@@ layer № {index+1} @@@")
             for index, node in enumerate(layer):
+                formatted_weights = ", ".join([f"{w:.3f}" for w in node.weights])
                 print(
-                    f"index -> {index}, neuron -> {node}, weights -> {len(node.weights)}, weight data -> {node.weights}")
+                    f"index -> {index}, neuron -> {node}, weights -> {len(node.weights)}, weight data -> {formatted_weights}")
 
     def save_model(self, filename):
         with open(filename, 'wb') as file:
@@ -318,6 +335,8 @@ class NeuralNetwork:
 class NeuralNetworkBasicTest(unittest.TestCase):
 
     def setUp(self):
+        current_test = self._testMethodName
+        print(f" ===============> Running test: {current_test} <===============") 
         self.nn = NeuralNetwork()
 
     def startTest(self, test):
@@ -325,61 +344,86 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         print(f"\n######## Running test: ######## {test._testMethodName}\n{'='*40}")
         
     def test_set_input_layer(self):
-        self.nn.set_input_layer(features=[1, 2])
+        self.nn.add_layer(neurons_in_layer=2)
         self.nn.print_nn()
         self.assertEqual(len(self.nn.layers[0]), 2)
 
-    def test_add_one_layer(self):
-        self.nn.set_input_layer(features=[1, 2])
+    def test_add_two_layers(self):
+        self.nn.add_layer(neurons_in_layer=2)
         self.nn.add_layer(neurons_in_layer=3)
         self.nn.print_nn()
         self.assertEqual(len(self.nn.layers[1]), 3)
 
-    def test_add_two_layers(self):
-        self.nn.set_input_layer(features=[1, 2])
-        self.nn.add_layer(neurons_in_layer=3)
-        self.nn.add_layer(neurons_in_layer=2)
-        self.nn.print_nn()
-        self.assertEqual(len(self.nn.layers[2]), 2)
-
     def test_forward_propagation(self):
-        self.nn.set_input_layer(features=[1, 2])
+        self.nn.add_layer(neurons_in_layer=2)
         self.nn.add_layer(neurons_in_layer=3)
         self.nn.add_layer(neurons_in_layer=4)
         self.nn.add_layer(neurons_in_layer=1)
-        self.nn.forward_propagation()
-        self.assertIsNotNone(self.nn.layers[2][1].feature_x_neuron_output)
+        self.nn.forward_propagation(input_data=[1,2])
+        self.assertTrue(type(self.nn.layers[2][1].feature_x_neuron_output) is float)
+        self.assertEqual(len(self.nn.layers[3]), 1)
 
     def test_back_propagation(self):
-        input_data = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-        expected = [1.1, 2.2]
-        self.nn.set_input_layer(features=input_data)
+        self.nn.add_layer(neurons_in_layer=9)
         self.nn.add_layer(neurons_in_layer=4)
         self.nn.add_layer(neurons_in_layer=2)
-        self.nn.forward_propagation()
-        self.nn.backward_propagation(expected_output_target=expected, learning_rate=0.01)
+        self.nn.forward_propagation(input_data=[1,2,3,4,5,6,7,8,9])
+        self.nn.backward_propagation(expected_output_target=[1.1, 2.2], learning_rate=0.01)
 
     def test_back_propagation_3_layers(self):
-        input_data = [1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
-        expected = [1.1, 2.2]
-        self.nn.set_input_layer(features=input_data)
+        self.nn.add_layer(neurons_in_layer=9)
         self.nn.add_layer(neurons_in_layer=100)
         self.nn.add_layer(neurons_in_layer=50)
         self.nn.add_layer(neurons_in_layer=27)
         self.nn.add_layer(neurons_in_layer=2)
-        self.nn.forward_propagation()
-        self.nn.backward_propagation(expected_output_target=expected, learning_rate=0.01)    
+        self.nn.forward_propagation(input_data=[1,2,3,4,5,6,7,8,9])
+        self.nn.backward_propagation(expected_output_target=[1.1, 2.2], learning_rate=0.01)
+        
+    def test_train(self):
+        self.nn.add_layer(neurons_in_layer=10)
+        self.nn.add_layer(neurons_in_layer=100)
+        self.nn.add_layer(neurons_in_layer=50)
+        self.nn.add_layer(neurons_in_layer=25)
+        self.nn.add_layer(neurons_in_layer=2)
+
+        input=[0,1,2,3,4,5,6,7,8,9]
+        input_data_set=[input, input, input]
+
+        target=[0.1, 0.99]
+        target_data_set=[target, target, target]
+
+        self.nn.train(inputs_list=input_data_set, targets_list=target_data_set, learning_rate=0.01, epoch=10)
+
+    def test_train_pred(self):
+        self.nn.add_layer(neurons_in_layer=10)
+        self.nn.add_layer(neurons_in_layer=50)
+        self.nn.add_layer(neurons_in_layer=2)
+
+        input=[0,1,2,3,4,5,6,7,8,9]
+        input_data_set=[input, input, input]
+
+        target=[0.1, 0.99]
+        target_data_set=[target, target, target]
+
+        self.nn.train(inputs_list=input_data_set, targets_list=target_data_set, learning_rate=0.01, epoch=10)
+
+        res = self.nn.pred(input=input)   
+        print("Prediction result => ", res)
+        self.assertTrue(res[0]<res[1])     
+        
 
 
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(NeuralNetworkBasicTest('test_set_input_layer'))
-    #suite.addTest(NeuralNetworkBasicTest('test_add_one_layer'))
-    #suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
-    #suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
+    suite.addTest(NeuralNetworkBasicTest('test_set_input_layer'))    
+    suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
+    suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
     suite.addTest(NeuralNetworkBasicTest('test_back_propagation'))
     suite.addTest(NeuralNetworkBasicTest('test_back_propagation_3_layers'))
+
+    suite.addTest(NeuralNetworkBasicTest('test_train'))
+    suite.addTest(NeuralNetworkBasicTest('test_train_pred'))
 
 
     # Run the test suite
