@@ -2,9 +2,7 @@ import unittest
 from typing import List
 from collections import deque
 import numpy as np
-import math
 from perceptron_n00b import NeuralNetwork
-
 
 
 class Autoencoder(NeuralNetwork):
@@ -29,10 +27,6 @@ def calculate_loss(output, expected_output):
 # Denoising 
 
             
-
-
-
-
 # TESTS
 class NeuralNetworkBasicTest(unittest.TestCase):
 
@@ -88,8 +82,6 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         self.nn.add_layer(neurons_in_layer=2)
         self.nn.forward_propagation()
         self.nn.backward_propagation(expected_output_target=expected, learning_rate=0.01)    
-
-
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()

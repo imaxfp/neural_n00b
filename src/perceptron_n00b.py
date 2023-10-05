@@ -66,6 +66,9 @@ class NeuralNetwork:
         self.matrix_n00b = MatrixNoobNp()
         self.layers = []
 
+    def get_layers(self):
+        return self.layers    
+
     def add_layer(self, neurons_in_layer: int):
             #add initial layer. FEATURES layer
             if len(self.layers) == 0:
@@ -265,10 +268,6 @@ class NeuralNetwork:
 
 
     def train(self, inputs_list, targets_list, learning_rate, epoch):
-
-
-
-
         for e in range(epoch):
             print('@@@@@@@@@@@@@@@@@@@@@  epoch -> ', e)
             for i in range(len(inputs_list)):
