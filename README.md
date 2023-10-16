@@ -10,8 +10,12 @@ Creating a virtual environment in Python using venv is a great way to manage pro
 - make sure if you have __init__.py in your 'src'
 - python3 -m venv ./myenv
 - source myenv/bin/activate
-- RExecute the next command from your project dir - export PYTHONPATH="${PYTHONPATH}:./" 
+- Rexecute the next command from your project dir - export PYTHONPATH="${PYTHONPATH}:./" 
 - pip3 install -r requirements.txt
+
+
+Useful plagins:
+- https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_variable-explorer-and-data-viewer
 
 
 TODO:

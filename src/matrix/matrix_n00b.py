@@ -91,6 +91,7 @@ class MatrixNoob:
             result.append(new_row)
 
         # Print the result of the multiplication
+        print("Matrices multiplication result:")
         self.print_matrix(result)
         return result
 
