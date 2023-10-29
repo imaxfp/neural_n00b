@@ -8,9 +8,9 @@
 Creating a virtual environment in Python using venv is a great way to manage project-specific dependencies and avoid conflicts with system packages.
 
 - make sure if you have __init__.py in your 'src'
-- python3 -m venv ./myenv
-- source myenv/bin/activate
-- Rexecute the next command from your project dir - export PYTHONPATH="${PYTHONPATH}:./" 
+- python3 -m venv ./env_nn_n00b
+- source ./env_nn_n00b/bin/activate
+- export PYTHONPATH="${PYTHONPATH}:./" - 'Rexecute the next command from your project dir'
 - pip3 install -r requirements.txt
 
 
