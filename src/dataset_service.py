@@ -56,4 +56,53 @@ def read_and_clean_zip_csv(csv_path, num_lines) -> pd:
         with zipf.open("cleaned_data.csv", 'w') as file:
             df_cleaned.to_csv(file, index=False)   
 
-    return df_cleaned         
+    return df_cleaned        
+
+
+def mock_cat_dog_img_data(samples: int):
+    # Mock data for CAT: more intensity in the center
+    #Return mock images 2d matrices 4x4 for the 2 clases "cat", "dog"
+
+    # Mock data for CAT: more intensity in the center
+    X_cat_mock  = [
+        [[50, 50, 50, 50],
+        [50, 200, 200, 50],
+        [50, 200, 200, 50],
+        [50, 50, 50, 50]],
+    ]
+
+    # Mock data for DOG: uniform intensity
+    X_dog_mock = [
+        [[150, 150, 150, 150],
+        [150, 150, 150, 150],
+        [150, 150, 150, 150],
+        [150, 150, 150, 150]],
+    ]
+
+    # Introducing slight variations in the mock data for diversity
+    for _ in range(samples-1):
+        # Slight variation for CAT
+        cat_variation = [
+            [50 + np.random.randint(-10, 10) for _ in range(4)],
+            [50 + np.random.randint(-10, 10)] + [200 + np.random.randint(-10, 10) for _ in range(2)] + [50 + np.random.randint(-10, 10)],
+            [50 + np.random.randint(-10, 10)] + [200 + np.random.randint(-10, 10) for _ in range(2)] + [50 + np.random.randint(-10, 10)],
+            [50 + np.random.randint(-10, 10) for _ in range(4)]
+        ]
+        X_cat_mock.append(cat_variation)
+
+        # Slight variation for DOG
+        dog_variation = [[150 + np.random.randint(-10, 10) for _ in range(4)] for _ in range(4)]
+        X_dog_mock.append(dog_variation)
+    return X_cat_mock, X_dog_mock    
+
+
+
+
+
+
+
+
+
+
+
+
