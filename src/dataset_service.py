@@ -64,20 +64,20 @@ def mock_cat_dog_img_data(samples: int):
     #Return mock images 2d matrices 4x4 for the 2 clases "cat", "dog"
 
     # Mock data for CAT: more intensity in the center
-    X_cat_mock  = [
+    X_cat_mock  =  np.array([
         [[50, 50, 50, 50],
         [50, 200, 200, 50],
         [50, 200, 200, 50],
         [50, 50, 50, 50]],
-    ]
+    ])
 
     # Mock data for DOG: uniform intensity
-    X_dog_mock = [
+    X_dog_mock = np.array([
         [[150, 150, 150, 150],
         [150, 150, 150, 150],
         [150, 150, 150, 150],
         [150, 150, 150, 150]],
-    ]
+    ])
 
     # Introducing slight variations in the mock data for diversity
     for _ in range(samples-1):
