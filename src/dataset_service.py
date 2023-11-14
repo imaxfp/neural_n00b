@@ -63,25 +63,13 @@ def mock_cat_dog_img_data(samples: int):
     # Mock data for CAT: more intensity in the center
     #Return mock images 2d matrices 4x4 for the 2 clases "cat", "dog"
 
-    # Mock data for CAT: more intensity in the center
-    X_cat_mock  =  [
-        [[50, 50, 50, 50],
-        [50, 200, 200, 50],
-        [50, 200, 200, 50],
-        [50, 50, 50, 50]],
-    ]
-
-    # Mock data for DOG: uniform intensity
-    X_dog_mock = [
-        [[150, 150, 150, 150],
-        [150, 150, 150, 150],
-        [150, 150, 150, 150],
-        [150, 150, 150, 150]]
-    ]
-
-    # Introducing slight variations in the mock data for diversity
-    for _ in range(samples-1):
-        # Slight variation for CAT
+    # Additional variations for CAT, DOG, and FROG
+    X_cat_mock = []
+    X_dog_mock = []
+    X_frog_mock = []
+    
+    # Generating more variations for CAT
+    for _ in range(samples):
         cat_variation = [
             [50 + np.random.randint(-10, 10) for _ in range(4)],
             [50 + np.random.randint(-10, 10)] + [200 + np.random.randint(-10, 10) for _ in range(2)] + [50 + np.random.randint(-10, 10)],
@@ -90,7 +78,25 @@ def mock_cat_dog_img_data(samples: int):
         ]
         X_cat_mock.append(cat_variation)
 
-        # Slight variation for DOG
-        dog_variation = [[150 + np.random.randint(-10, 10) for _ in range(4)] for _ in range(4)]
+    # Generating more variations for DOG
+    for _ in range(samples):
+        dog_variation = [
+            [150 + np.random.randint(-10, 10) for _ in range(4)],
+            [150 + np.random.randint(-10, 10) for _ in range(4)],
+            [150 + np.random.randint(-10, 10) for _ in range(4)],
+            [150 + np.random.randint(-10, 10) for _ in range(4)]
+        ]
         X_dog_mock.append(dog_variation)
-    return X_cat_mock, X_dog_mock    
+
+    # Generating more variations for FROG
+    for _ in range(samples):
+        frog_variation = [
+            [11 + np.random.randint(-20, 20) for _ in range(4)],
+            [33 + np.random.randint(-30, 40) for _ in range(4)],
+            [55 + np.random.randint(-60, 90) for _ in range(4)],
+            [77 + np.random.randint(-12, 10) for _ in range(4)]
+        ]
+        X_frog_mock.append(frog_variation)
+
+    
+    return X_cat_mock, X_dog_mock, X_frog_mock    

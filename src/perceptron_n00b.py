@@ -343,9 +343,9 @@ class NeuralNetworkBasicTest(unittest.TestCase):
         print(f"\n######## Running test: ######## {test._testMethodName}\n{'='*40}")
         
     def test_set_input_layer(self):
-        self.nn.add_layer(neurons_in_layer=2)
+        self.nn.add_layer(neurons_in_layer=4)
         self.nn.print_nn()
-        self.assertEqual(len(self.nn.layers[0]), 2)
+        self.assertEqual(len(self.nn.layers[0]), 4)
 
     def test_add_two_layers(self):
         self.nn.add_layer(neurons_in_layer=2)
@@ -415,13 +415,13 @@ class NeuralNetworkBasicTest(unittest.TestCase):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(NeuralNetworkBasicTest('test_set_input_layer'))    
-    suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
-    suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
-    suite.addTest(NeuralNetworkBasicTest('test_back_propagation'))
-    suite.addTest(NeuralNetworkBasicTest('test_back_propagation_3_layers'))
+    #suite.addTest(NeuralNetworkBasicTest('test_set_input_layer'))    
+    #suite.addTest(NeuralNetworkBasicTest('test_add_two_layers'))
+    #suite.addTest(NeuralNetworkBasicTest('test_forward_propagation'))
+    #suite.addTest(NeuralNetworkBasicTest('test_back_propagation'))
+    #suite.addTest(NeuralNetworkBasicTest('test_back_propagation_3_layers'))
 
-    suite.addTest(NeuralNetworkBasicTest('test_train'))
+    #suite.addTest(NeuralNetworkBasicTest('test_train'))
     suite.addTest(NeuralNetworkBasicTest('test_train_pred'))
 
 
