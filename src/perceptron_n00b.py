@@ -150,15 +150,19 @@ class NeuralNetwork:
         layers_nodes_output = []
         for layer in layers:
             weights_nodes_in_layer = []
+            print_matrxix_log=True
             for node in layer:
                 weights_nodes_in_layer.append(node.weights)
 
             input_data_matrix = self.matrix_n00b.list_to_matrix(input_data, len(input_data))    
 
             res = self.matrix_n00b.matrices_multiplication(input_data_matrix,
-                                                           self.matrix_n00b.transpose(weights_nodes_in_layer))
+                                                           self.matrix_n00b.transpose(weights_nodes_in_layer),
+                                                           print_log=print_matrxix_log)
             layers_nodes_output.append(res[0])
             input_data = res[0]
+            print_matrxix_log=False
+            
 
         # Use activation function for calulation outputs for the each node
         for i, layer in enumerate(layers_nodes_output):
@@ -197,7 +201,15 @@ class NeuralNetwork:
         for i in range(0, len(expected_output_target)):
             diff = expected_output_target[i] - right_hand_side_layer_outputs[i]
             errors_curent.append(np.array(diff))
-        errors_all_layers_lifo.append(errors_curent)    
+        errors_all_layers_lifo.append(errors_curent)   
+        
+        # 1 Input layer X feature ------> 
+        # 2 Hidden layer[1node=0.7, 2node=0.5, ,3node=0.1] ----->
+        # 3 Hidden layer[1node=0.7, 2node=0.5, ,3node=0.1] -----> 
+        # 4 Hidden layer[1node=0.7, 2node=0.5, ,3node=0.1] -----> 
+        #   [1node=0.7, 2node=0.5, ,3node=0.1] 
+        # 5 Hidden layer[1node=0.7, 2node=0.5, ,3node=0.1] ----->  
+        # 6 Output layer[w1=0.7, w2=0.5, w3=0.1] = err 0.9    
         
         #Calculate errors for the hidden layers
         for i in range(1, len(self.layers)):
@@ -206,8 +218,9 @@ class NeuralNetwork:
             
             weigths_matrix = np.array(weights_output_layer).T
             error_matrix = np.array(errors_all_layers_lifo[-1])
-            print("Current layer is hidden layer ",len(self.layers) - i)
-            print("weigths_matrix {w_m} * error_matrix {e_m}".format(w_m=weigths_matrix.shape, e_m=error_matrix.shape) )
+            
+            #print("Current layer is hidden layer ",len(self.layers) - i)
+            #print("weigths_matrix {w_m} * error_matrix {e_m}".format(w_m=weigths_matrix.shape, e_m=error_matrix.shape) )
 
             hidden_errors = np.dot(weigths_matrix, error_matrix)    
             hidden_errors = [np.array(x) for x in hidden_errors]
@@ -238,8 +251,8 @@ class NeuralNetwork:
             derivative_err = np.array([np.array([e]) for e in output_errors])
                               
 
-            print("Current layer is hidden layer ",len(self.layers) - i)
-            print("derivative_err {d_err} * error_matrix {l_h_out}".format(d_err=derivative_err.shape, l_h_out=left_hand_side_outputs.shape) )
+            #print("Current layer is hidden layer ",len(self.layers) - i)
+            #print("derivative_err {d_err} * error_matrix {l_h_out}".format(d_err=derivative_err.shape, l_h_out=left_hand_side_outputs.shape) )
 
             err_weights_matrix = learning_rate * np.dot(derivative_err, left_hand_side_outputs)
 
@@ -421,8 +434,8 @@ if __name__ == '__main__':
     #suite.addTest(NeuralNetworkBasicTest('test_back_propagation'))
     #suite.addTest(NeuralNetworkBasicTest('test_back_propagation_3_layers'))
 
-    #suite.addTest(NeuralNetworkBasicTest('test_train'))
-    suite.addTest(NeuralNetworkBasicTest('test_train_pred'))
+    suite.addTest(NeuralNetworkBasicTest('test_train'))
+    #suite.addTest(NeuralNetworkBasicTest('test_train_pred'))
 
 
     # Run the test suite

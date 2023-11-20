@@ -30,7 +30,7 @@ class MatrixNoobNp:
         return matrix
 
 
-    def matrices_multiplication(self, mat1, mat2):
+    def matrices_multiplication(self, mat1, mat2, print_log=False):
         """
         Example:
         self.m1 = [[2, 2, 2]]
@@ -65,8 +65,9 @@ class MatrixNoobNp:
         # Get and print the shapes of the matrices
         shape_mat1 = (len(mat1), len(mat1[0]))
         shape_mat2 = (len(mat2), len(mat2[0]))
-        print(f'Matrices multiplication -> shape of first matrix: {shape_mat1}')
-        print(f'Matrices multiplication -> shape of second matrix: {shape_mat2}')
+        if(print_log):
+            print(f'Matrices multiplication -> shape of first matrix: {shape_mat1}')
+            print(f'Matrices multiplication -> shape of second matrix: {shape_mat2}')
 
         # Check if number of columns in first matrix equals number of rows in second matrix
         if shape_mat1[1] != shape_mat2[0]:
