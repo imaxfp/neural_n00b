@@ -23,6 +23,7 @@ from gensim.models import Word2Vec
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, matthews_corrcoef
 import numpy as np
 import torch
+import pickle
 
 # Create a separate logger for debug file logging
 log_metrics = logging.getLogger('debugLogger')
@@ -128,7 +129,7 @@ def prepare_df_for_ml_training(df: pd.DataFrame):
 # 2 DataLoader preparation
 class PredictionDataset(Dataset):
     def __init__(self, features):
-        self.features = torch.cat(features, dim=1)
+        self.features = features
         logging.info(f"PredictionDataset features {self.features}") 
     def __len__(self):
         return len(self.features)
@@ -317,12 +318,48 @@ def load_model():
     return model
 
 
+def store_model_pkl(model):
+    # Assuming 'model' is your PyTorch model
+    with open("./models/spam_ham_model.pkl", "wb") as file:
+        pickle.dump(model, file)
+        
+def load_model_pkl(path):
+    with open(path, "rb") as file:
+        model = pickle.load(file)        
+    return model 
+
+def load_pkl_and_pred():
+    model = load_model_pkl("./models/spam_ham_model.pkl")
+    model.eval()
+    df = pd.read_csv("./data/spam_data.csv", nrows=10)
+    df = prepare_df_for_ml_training(df)
+    
+    test_features, test_targets = get_features_and_targets(df)
+   
+    #x = test_features[0] 
+    pred = PredictionDataset(test_features)
+    dataLoader = DataLoader(pred)
+   
+    all_probabilities = []
+    all_predictions = []
+    for x in dataLoader:
+        pred = model(x)
+        all_probabilities.extend(pred[:, 1].detach().numpy())  # Assuming binary classification
+        all_predictions.extend(pred.argmax(1).tolist())
+        logging.info(f"Predicted: {pred}")
+    
+
 if __name__ == "__main__":
     #run_tests() 
     
-    #Train the model
-    train_loader, test_loader = get_data_loaders("./data/spam_data.csv", batch_size = 100, test_size = 0.2)
-    model = SpamHamNN(num_features=1)    
-    model = train_model(model, train_loader, learning_rate=0.001, epochs= 10) 
-    test_model(model, test_loader)    
-    torch.save(model.state_dict(), "/models/spam_ham_model")
+    #TRAIN the model
+    #train_loader, test_loader = get_data_loaders("./data/spam_data.csv", batch_size = 100, test_size = 0.2)    
+    #model = SpamHamNN(num_features=1)    
+    #model = train_model(model, train_loader, learning_rate=0.001, epochs= 10) 
+    #test_model(model, test_loader)    
+    #torch.save(model.state_dict(), "./models/spam_ham_model.pt")
+    #store_model_pkl(model)
+    
+    #LOAD model and test
+    load_pkl_and_pred()
+    
