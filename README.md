@@ -23,4 +23,5 @@ TODO:
 - add visualisation for the NN
 - visualisation and add 3 lists (LOSS, Acuracy for validation dataset and test dataset) matplotlib or streamlit.
 - https://developers.arcgis.com/python/guide/faster-rcnn-object-detector/
- 
+- https://analyticsindiamag.com/r-cnn-vs-fast-r-cnn-vs-faster-r-cnn-a-comparative-guide/
+
