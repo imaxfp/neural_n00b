@@ -21,4 +21,6 @@ Useful plagins:
 TODO:
 - add different activation functions and derivatives 
 - add visualisation for the NN
-- visualisation and add 3 lists (LOSS, Acuracy for validation dataset and test dataset) matplotlib or streamlit. 
+- visualisation and add 3 lists (LOSS, Acuracy for validation dataset and test dataset) matplotlib or streamlit.
+- https://developers.arcgis.com/python/guide/faster-rcnn-object-detector/
+ 

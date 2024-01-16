@@ -313,7 +313,7 @@ def run_tests():
 
 def load_model():    
     model = SpamHamNN(num_features=1) 
-    model.load_state_dict(torch.load("/models/spam_ham_model"))
+    model.load_state_dict(torch.load("/models/spam_ham_model.mar"))
     model.eval()
     return model
 
@@ -328,16 +328,12 @@ def load_model_pkl(path):
         model = pickle.load(file)        
     return model 
 
-def load_pkl_and_pred():
-    model = load_model_pkl("./models/spam_ham_model.pkl")
-    model.eval()
-    df = pd.read_csv("./data/spam_data.csv", nrows=10)
-    df = prepare_df_for_ml_training(df)
+def pred(model, df):
     
-    test_features, test_targets = get_features_and_targets(df)
+    features, _ = get_features_and_targets(df)
    
     #x = test_features[0] 
-    pred = PredictionDataset(test_features)
+    pred = PredictionDataset(features)
     dataLoader = DataLoader(pred)
    
     all_probabilities = []
@@ -347,6 +343,8 @@ def load_pkl_and_pred():
         all_probabilities.extend(pred[:, 1].detach().numpy())  # Assuming binary classification
         all_predictions.extend(pred.argmax(1).tolist())
         logging.info(f"Predicted: {pred}")
+     
+    return all_probabilities, all_predictions     
     
 
 if __name__ == "__main__":
@@ -361,5 +359,8 @@ if __name__ == "__main__":
     #store_model_pkl(model)
     
     #LOAD model and test
-    load_pkl_and_pred()
-    
+    model = load_model_pkl("./models/spam_ham_model.pkl")
+    model.eval()
+    df = pd.read_csv("./data/spam_data.csv", nrows=10)
+    df = prepare_df_for_ml_training(df)
+    pred(model, df)
